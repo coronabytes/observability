@@ -1,0 +1,86 @@
+version: '3'
+
+services:
+
+  loki-init:
+    image: grafana/loki:3.1.0
+    user: root
+    volumes:
+      - ./loki-data:/loki
+    entrypoint:
+      - "chown"
+      - "10001:10001"
+      - "/loki"
+
+  loki:
+    image: grafana/loki:3.1.0
+    restart: unless-stopped
+    volumes:
+      - ./loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    depends_on:
+      - loki-init
+
+  tempo-init:
+    image: grafana/tempo:2.5.0
+    user: root
+    volumes:
+      - ./tempo-data:/var/tempo
+    entrypoint:
+      - "chown"
+      - "10001:10001"
+      - "/var/tempo"
+      
+  tempo:
+    image: grafana/tempo:2.5.0
+    restart: unless-stopped
+    volumes:
+      - ./tempo-data:/var/tempo
+      - ./tempo.yaml:/etc/tempo.yaml
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    depends_on:
+      - tempo-init
+      
+  prometheus:
+    image: prom/prometheus:v2.53.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus.yaml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=otlp-write-receiver
+      - --enable-feature=exemplar-storage
+      - --enable-feature=native-histograms
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yaml:/etc/prometheus.yaml
+
+  collector:
+    image: otel/opentelemetry-collector
+    restart: unless-stopped
+    ports:
+      - 4317:4317
+      - 55679:55679
+    volumes:
+      - ./collector.yaml:/etc/otelcol/config.yaml
+      
+  grafana:
+    image: grafana/grafana:11.1.0
+    restart: unless-stopped
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+      
+volumes:
+  prometheus-data:
+  grafana-data:
