@@ -43,6 +43,16 @@ app.MapControllers();
 app.Run();
 ```
 
+## More Instrumentation
+
+```csharp
+builder.AddObservability(configureTracing: tracer =>
+{
+    tracer.AddEntityFrameworkCoreInstrumentation();
+    tracer.AddRedisInstrumentation();
+});
+```
+
 ## Environment Variables
 
 ```
