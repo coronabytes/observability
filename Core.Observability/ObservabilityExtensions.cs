@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -18,7 +19,8 @@ public static class ObservabilityExtensions
         Action<OpenTelemetryLoggerOptions>? configureLogs = null,
         Action<MeterProviderBuilder>? configureMetrics = null,
         Action<TracerProviderBuilder>? configureTracing = null,
-        Action<ResourceBuilder>? configureResource = null)
+        Action<ResourceBuilder>? configureResource = null,
+        Action<HttpStandardResilienceOptions>? configureHttpResilience = null)
     {
         builder.Services.AddServiceDiscovery();
 
@@ -27,7 +29,10 @@ public static class ObservabilityExtensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            http.AddStandardResilienceHandler();
+            http.AddStandardResilienceHandler(options =>
+            {
+                configureHttpResilience?.Invoke(options);
+            });
             http.AddServiceDiscovery();
         });
 
