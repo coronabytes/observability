@@ -23,7 +23,7 @@ internal class ObservabilityMiddleware(RequestDelegate next,
         }
 
         if (options.TraceIdHeader != null)
-            context.Response.Headers.Append(options.TraceIdHeader, Activity.Current?.Id ?? context.TraceIdentifier);
+            context.Response.Headers.Append(options.TraceIdHeader, Activity.Current?.TraceId.ToHexString() ?? context.TraceIdentifier);
 
         using (logger.BeginScope(tags))
         {
