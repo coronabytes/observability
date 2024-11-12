@@ -1,10 +1,11 @@
 using Core.Observability;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 
 builder.AddObservability();
 builder.Services.Configure<ObservabilityOptions>(options =>
@@ -19,8 +20,8 @@ builder.Services.Configure<ObservabilityOptions>(options =>
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapOpenApi();
+app.MapScalarApiReference();
 app.UseAuthorization();
 
 app.MapObservabilityHealthChecks();
