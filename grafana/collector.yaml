@@ -22,12 +22,6 @@ exporters:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
-  logging/metrics:
-    verbosity: detailed
-  logging/traces:
-    verbosity: detailed
-  logging/logs:
-    verbosity: detailed
 
 service:
   pipelines:

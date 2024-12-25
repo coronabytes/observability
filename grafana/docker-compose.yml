@@ -3,7 +3,7 @@ version: '3'
 services:
 
   loki-init:
-    image: grafana/loki:3.1.0
+    image: grafana/loki:3.3.0
     user: root
     volumes:
       - ./loki-data:/loki
@@ -13,7 +13,7 @@ services:
       - "/loki"
 
   loki:
-    image: grafana/loki:3.1.0
+    image: grafana/loki:3.3.0
     restart: unless-stopped
     volumes:
       - ./loki-data:/loki
@@ -22,7 +22,7 @@ services:
       - loki-init
 
   tempo-init:
-    image: grafana/tempo:2.5.0
+    image: grafana/tempo:2.6.1
     user: root
     volumes:
       - ./tempo-data:/var/tempo
@@ -32,7 +32,7 @@ services:
       - "/var/tempo"
       
   tempo:
-    image: grafana/tempo:2.5.0
+    image: grafana/tempo:2.6.1
     restart: unless-stopped
     volumes:
       - ./tempo-data:/var/tempo
@@ -42,7 +42,7 @@ services:
       - tempo-init
       
   prometheus:
-    image: prom/prometheus:v2.53.1
+    image: prom/prometheus:v3.0.1
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus.yaml
@@ -64,7 +64,7 @@ services:
       - ./collector.yaml:/etc/otelcol/config.yaml
       
   grafana:
-    image: grafana/grafana:11.1.0
+    image: grafana/grafana:11.4.0
     restart: unless-stopped
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
