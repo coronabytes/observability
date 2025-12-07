@@ -20,21 +20,22 @@ public static class ObservabilityExtensions
         Action<MeterProviderBuilder>? configureMetrics = null,
         Action<TracerProviderBuilder>? configureTracing = null,
         Action<ResourceBuilder>? configureResource = null,
-        Action<HttpStandardResilienceOptions>? configureHttpResilience = null)
+        Action<HttpStandardResilienceOptions>? configureHttpResilience = null, 
+        bool enableHttpResilience = true)
     {
         builder.Services.AddServiceDiscovery();
 
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
-        builder.Services.ConfigureHttpClientDefaults(http =>
+        if (enableHttpResilience)
         {
-            http.AddStandardResilienceHandler(options =>
+            builder.Services.ConfigureHttpClientDefaults(http =>
             {
-                configureHttpResilience?.Invoke(options);
+                http.AddStandardResilienceHandler(options => { configureHttpResilience?.Invoke(options); });
+                http.AddServiceDiscovery();
             });
-            http.AddServiceDiscovery();
-        });
+        }
 
         if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
         {
