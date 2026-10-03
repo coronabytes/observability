@@ -9,7 +9,7 @@ public class ObservabilityOptions
     public Func<HttpContext, Exception, ILogger, ValueTask>? ExceptionHandler { get; set; } =
         async (context, exception, logger) =>
         {
-            logger.LogError(exception, exception.Message);
+            logger.LogError(exception, "Unhandled exception");
 
             context.Response.StatusCode = 500;
             await context.Response.WriteAsJsonAsync(new

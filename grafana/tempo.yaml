@@ -18,21 +18,18 @@ storage:
   trace:
     backend: local
     wal:
-      path: /tmp/tempo/wal
+      path: /var/tempo/wal
     local:
-      path: /tmp/tempo/blocks
+      path: /var/tempo/blocks
 
 metrics_generator:
-  processor:
-    local_blocks:
-      filter_server_spans: false
-  traces_storage:
-    path: /tmp/tempo/generator/traces
   storage:
-    path: /tmp/tempo/generator/wal
+    path: /var/tempo/generator/wal
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
 
 overrides:
-  metrics_generator_processors: [service-graphs, local-blocks]
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]

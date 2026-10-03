@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +16,17 @@ namespace Core.Observability;
 
 public static class ObservabilityExtensions
 {
+    private const string HealthEndpointPath = "/health";
+    private const string AlivenessEndpointPath = "/alive";
+
+    private static readonly string[] OtlpEndpointKeys =
+    [
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"
+    ];
+
     public static IHostApplicationBuilder AddObservability(this IHostApplicationBuilder builder, 
         Action<OpenTelemetryLoggerOptions>? configureLogs = null,
         Action<MeterProviderBuilder>? configureMetrics = null,
@@ -28,16 +40,15 @@ public static class ObservabilityExtensions
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
-        if (enableHttpResilience)
+        builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            builder.Services.ConfigureHttpClientDefaults(http =>
-            {
-                http.AddStandardResilienceHandler(options => { configureHttpResilience?.Invoke(options); });
-                http.AddServiceDiscovery();
-            });
-        }
+            if (enableHttpResilience)
+                http.AddStandardResilienceHandler(configureHttpResilience ?? (_ => { }));
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
+            http.AddServiceDiscovery();
+        });
+
+        if (OtlpEndpointKeys.Any(key => !string.IsNullOrWhiteSpace(builder.Configuration[key])))
         {
             builder.Logging.AddOpenTelemetry(logging =>
             {
@@ -58,13 +69,19 @@ public static class ObservabilityExtensions
                 {
                     metrics.AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation()
-                        .AddRuntimeInstrumentation();
+                        .AddMeter("System.Runtime");
 
                     configureMetrics?.Invoke(metrics);
                 })
                 .WithTracing(tracing =>
                 {
-                    tracing.AddAspNetCoreInstrumentation()
+                    tracing.AddAspNetCoreInstrumentation(aspnet =>
+                        {
+                            // exclude health check probes from tracing
+                            aspnet.Filter = context =>
+                                !context.Request.Path.StartsWithSegments(HealthEndpointPath)
+                                && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath);
+                        })
                         .AddHttpClientInstrumentation();
 
                     configureTracing?.Invoke(tracing);
@@ -75,16 +92,25 @@ public static class ObservabilityExtensions
         return builder;
     }
 
-    public static WebApplication UseObservability(this WebApplication app)
+    /// <summary>
+    /// Register as early as possible in the pipeline, so exceptions from later middleware are enriched and handled.
+    /// </summary>
+    public static T UseObservability<T>(this T app) where T : IApplicationBuilder
     {
         app.UseMiddleware<ObservabilityMiddleware>();
 
         return app;
     }
-    public static WebApplication MapObservabilityHealthChecks(this WebApplication app)
+
+    /// <summary>
+    /// Maps /health (all checks) and /alive (checks tagged "live") without authentication.
+    /// Health check results can disclose details about the service, consider mapping them only in development
+    /// or on an internal port in production.
+    /// </summary>
+    public static T MapObservabilityHealthChecks<T>(this T app) where T : IEndpointRouteBuilder
     {
-        app.MapHealthChecks("/health").AllowAnonymous();
-        app.MapHealthChecks("/alive", new HealthCheckOptions
+        app.MapHealthChecks(HealthEndpointPath).AllowAnonymous();
+        app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
         {
             Predicate = r => r.Tags.Contains("live")
         }).AllowAnonymous();

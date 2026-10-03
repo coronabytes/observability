@@ -6,7 +6,7 @@ namespace Core.Observability.SampleApp.Controllers
     [Route("[controller]")]
     public class WeatherForecastController(ILogger<WeatherForecastController> logger) : ControllerBase
     {
-        [HttpGet(Name = "request")]
+        [HttpGet]
         public IActionResult Get()
         {
             return Ok();

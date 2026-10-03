@@ -9,18 +9,24 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     timeout-minutes: 20
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3   
-    
+    - uses: actions/checkout@v7
+
     - name: dotnet
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
-    
+
     - name: build
       run: dotnet build --configuration Release
+
+    - name: test
+      run: dotnet test --configuration Release --no-build

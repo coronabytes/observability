@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Core.Observability.SampleApp/Core.Observability.SampleApp.csproj" />
+  <Project Path="Core.Observability.Tests/Core.Observability.Tests.csproj" />
   <Project Path="Core.Observability/Core.Observability.csproj" />
 </Solution>

@@ -4,7 +4,6 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
 builder.AddObservability();
@@ -20,14 +19,14 @@ builder.Services.Configure<ObservabilityOptions>(options =>
 
 var app = builder.Build();
 
+app.UseObservability();
+
 app.MapOpenApi();
 app.MapScalarApiReference();
-app.UseAuthorization();
-
 app.MapObservabilityHealthChecks();
-app.UseObservability();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-

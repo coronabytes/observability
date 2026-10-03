@@ -7,9 +7,10 @@ dotnet add package Core.Observability
 # 3-Line OpenTelemetry ASP.NET Core Integration
 - trace id in response header
 - sends logs, metrics and traces to opentelemetry collector
-- enrichment/augmentation of logs and traces even when exceptions occurr
+- enrichment/augmentation of logs and traces even when exceptions occur
+- exceptions recorded on traces, client disconnects ignored
 - inject trace id to http requests
-- health checks
+- health checks (excluded from tracing)
 - best practices from aspire
   - servicediscovery
   - http resilience handler
@@ -24,20 +25,20 @@ builder.Services.Configure<ObservabilityOptions>(options =>
     options.TraceIdHeader = "x-trace-id";
     options.Augment = (context, tags) =>
     {
-        tags.Add("TenantId", "extrakt from http context");
+        tags.Add("TenantId", "extract from http context");
         return ValueTask.CompletedTask;
     };
 });
 ```
 
 ```csharp
-// optional
+// required - register early, so exceptions from later middleware are enriched and handled
+app.UseObservability();
+
+// optional - /health and /alive are anonymous, consider mapping them only in development or on an internal port
 app.MapObservabilityHealthChecks();
 
 app.UseAuthorization();
-
-// required
-app.UseObservability();
 
 app.MapControllers();
 app.Run();

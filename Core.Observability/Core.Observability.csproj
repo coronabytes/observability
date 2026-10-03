@@ -7,11 +7,10 @@
 
     <Authors>Andreas Dominik Jung</Authors>
     <Copyright>Andreas Dominik Jung</Copyright>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>Core.Observability</PackageId>
-    <PackageTags>aspnetcore observability telemetry</PackageTags>
+    <PackageTags>aspnetcore observability telemetry opentelemetry otel tracing logging metrics</PackageTags>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Description></Description>
+    <Description>OpenTelemetry logs, metrics and traces, trace id response header, log/trace enrichment, health checks, service discovery and http resilience for ASP.NET Core in a few lines.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version>1.0.0</Version>
     <PackageProjectUrl>https://github.com/coronabytes/observability</PackageProjectUrl>
@@ -20,18 +19,23 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RepositoryUrl>https://github.com/coronabytes/observability.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
 
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.5.0" />
-    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.5.0" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.17.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="10.10.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.19.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.19.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
   </ItemGroup>
 
 </Project>

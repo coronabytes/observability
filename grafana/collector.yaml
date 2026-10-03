@@ -10,15 +10,15 @@ processors:
   batch:
 
 exporters:
-  otlphttp/metrics:
+  otlp_http/metrics:
     endpoint: http://prometheus:9090/api/v1/otlp
     tls:
       insecure: true
-  otlphttp/traces:
+  otlp_http/traces:
     endpoint: http://tempo:4418
     tls:
       insecure: true
-  otlphttp/logs:
+  otlp_http/logs:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
@@ -28,12 +28,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/traces]
+      exporters: [otlp_http/traces]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/metrics]
+      exporters: [otlp_http/metrics]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/logs]
+      exporters: [otlp_http/logs]

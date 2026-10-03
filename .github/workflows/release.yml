@@ -5,36 +5,38 @@ on:
     tags:
       - '*.*.*'
 
-jobs:
-  build:
+permissions:
+  contents: read
 
+jobs:
+  release:
+    permissions:
+      id-token: write
+    timeout-minutes: 20
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v7
+
     - name: Setup
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
-        
-    - name: Build Version
-      id: vars
-      run: echo "::set-output name=VERSION::<Version>${GITHUB_REF#refs/tags/}</Version>"
-      
-    - name: Apply Version
-      uses: jacobtomlinson/gha-find-replace@v2
-      with:
-        find: "<Version>.*<\\/Version>"
-        replace: "${{ steps.vars.outputs.VERSION }}"
-        include: "**/Core.Observability.csproj"
-        regex: true
-    
+
     - name: Build
       run: dotnet build --configuration Release
 
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+    
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+        
     - name: Pack
-      run: dotnet pack --configuration Release
-      
+      run: dotnet pack Core.Observability/Core.Observability.csproj --configuration Release --output artifacts -p:Version=${GITHUB_REF_NAME}
+
     - name: Publish
-      run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "artifacts/*.nupkg" --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
